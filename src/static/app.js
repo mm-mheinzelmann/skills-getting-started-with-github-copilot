@@ -22,24 +22,49 @@ document.addEventListener("DOMContentLoaded", () => {
         const spotsLeft = details.max_participants - details.participants.length;
 
         activityCard.innerHTML = `
-          <h4>${name}</h4>
-          <p>${details.description}</p>
-          <p><strong>Schedule:</strong> ${details.schedule}</p>
+          <h4></h4>
+          <p></p>
+          <p><strong>Schedule:</strong> <span></span></p>
           <p><strong>Availability:</strong> ${spotsLeft} spots left</p>
           <div class="participants-section">
             <h5>Participants</h5>
-            ${
-              details.participants.length > 0
-                ? `<ul>${details.participants
-                    .map(
-                      (participant) =>
-                        `<li><span>${participant}</span><button type="button" class="unregister-button" data-activity="${name}" data-email="${participant}" aria-label="Unregister ${participant}">&#128465;</button></li>`
-                    )
-                    .join("")}</ul>`
-                : '<p class="no-participants">No participants yet</p>'
-            }
           </div>
         `;
+
+        // Set text content instead of interpolating into innerHTML to avoid XSS
+        activityCard.querySelector("h4").textContent = name;
+        activityCard.querySelector("p").textContent = details.description;
+        activityCard.querySelector("p + p span").textContent = details.schedule;
+
+        const participantsSection = activityCard.querySelector(".participants-section");
+
+        if (details.participants.length > 0) {
+          const ul = document.createElement("ul");
+          details.participants.forEach((participant) => {
+            const li = document.createElement("li");
+
+            const span = document.createElement("span");
+            span.textContent = participant;
+            li.appendChild(span);
+
+            const button = document.createElement("button");
+            button.type = "button";
+            button.className = "unregister-button";
+            button.dataset.activity = name;
+            button.dataset.email = participant;
+            button.setAttribute("aria-label", `Unregister ${participant}`);
+            button.innerHTML = "&#128465;";
+            li.appendChild(button);
+
+            ul.appendChild(li);
+          });
+          participantsSection.appendChild(ul);
+        } else {
+          const noParticipants = document.createElement("p");
+          noParticipants.className = "no-participants";
+          noParticipants.textContent = "No participants yet";
+          participantsSection.appendChild(noParticipants);
+        }
 
         activitiesList.appendChild(activityCard);
 
